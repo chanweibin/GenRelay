@@ -9,7 +9,7 @@ PARITY = "N"
 BAUDRATE = 9600
 STOPBITS = 1
 BYTESIZE = 8
-TIMEOUT = 1
+TIMEOUT = 5
 
 #* Input changes
 bit = 256
@@ -31,16 +31,16 @@ def main():
     # start connection
     rs845 = serial.Serial(port=PORT, baudrate=BAUDRATE, bytesize=8, parity=PARITY, stopbits=1, xonxoff=0)
     device = modbus_rtu.RtuMaster(rs845)
+    device.set_timeout(5.0)
     device.set_verbose(True)
     
-    
     try:
-        output = bit * 7
+        output = bit * 8
         logger.info(device.execute(slaveid, cst.WRITE_SINGLE_REGISTER, channel, output_value=output))
-        # logger.info(device.execute(slaveid, cst.READ_HOLDING_REGISTERS, 2, 4))
+        logger.info(device.execute(slaveid, cst.READ_HOLDING_REGISTERS, 0, 5))
         time.sleep(0.5)
+        
     
-        device.close()
     
     except Exception as e:
         print("Exception: ", end=": ")
@@ -52,5 +52,7 @@ def main():
         print(E)
         pass
     
+    device.close()
+
 if __name__ == "__main__":
     main()
