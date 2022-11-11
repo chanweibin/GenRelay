@@ -4,7 +4,7 @@ from modbus_tk import modbus_rtu
 
 
 #* Settings for RS485
-PORT = "COM7"
+PORT = "COM6"
 PARITY = "N"
 BAUDRATE = 9600
 STOPBITS = 1
@@ -13,24 +13,42 @@ TIMEOUT = 1
 
 #* Input changes
 bit = 256
-channel = 2
+channel = 0
+# address = 40001 + channel
+slaveid = 1
 
 #* logger prof
 logger = modbus_tk.utils.create_logger("console")
 
+def connect():
+    pass
+
+# def write(device, channel:int, value:int):
+    # device.execute(slaveid, cst.WRITE_SINGLE_REGISTER, channel, output_value=value)
+
 def main():
     
     # start connection
-    device = modbus_rtu.RtuMaster(serial.Serial(port=PORT, baudrate=BAUDRATE, bytesize=8, parity=PARITY, stopbits=1, xonxoff=0))
-    device.set_timeout(5.0)
+    rs845 = serial.Serial(port=PORT, baudrate=BAUDRATE, bytesize=8, parity=PARITY, stopbits=1, xonxoff=0)
+    device = modbus_rtu.RtuMaster(rs845)
     device.set_verbose(True)
     
+    
     try:
-        output = bit * 3 
-        logger.info(device.execute(1, cst.WRITE_SINGLE_REGISTER, channel, output_value=output))
+        output = bit * 7
+        logger.info(device.execute(slaveid, cst.WRITE_SINGLE_REGISTER, channel, output_value=output))
+        # logger.info(device.execute(slaveid, cst.READ_HOLDING_REGISTERS, 2, 4))
         time.sleep(0.5)
+    
+        device.close()
+    
+    except Exception as e:
+        print("Exception: ", end=": ")
+        print(e)
+        pass
         
-    except Exception as E:
+    except modbus_tk.modbus.ModbusError as E:
+        print("Modbus Exception ", end=": ")
         print(E)
         pass
     
