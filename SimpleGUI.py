@@ -243,18 +243,10 @@ class WindowGUI:
     
     
     
-        
     
     
     
-        
-# ToDo : call from MB 
-class SerialSettingsWindow:
-    def __init__(self) -> None:
-        pass
+
     
-    def press_connect(self):
-        # ToDo : parse inserted value
-        pass    
-    
-myapp = WindowGUI("test")
+if __name__ == "__main__":
+    myApps = WindowGUI("16-Output Control")
