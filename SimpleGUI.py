@@ -53,7 +53,8 @@ class WindowGUI:
 
         # ToDo : Create Serial object 
         self.button_connect = tk.Button(self.settings_frame, text="Connect", command=self.serial_popup, bg="white", width=20, height=5)
-        self.button_disconnect = tk.Button(self.settings_frame, text="Disconnect", bg="white", width=20, height=5)
+        self.button_disconnect = tk.Button(self.settings_frame, text="Disconnect",command=self.disconnect_button, bg="white", width=20, height=5)
+        self.button_openall = tk.Button(self.settings_frame, text="Disconnect All", command=self.disconnect_all, bg="white", width=10, height=2, pady=5)
         
         #* Toggle button
         self.button_chan01 = tk.Button(self.control_frame, text="Channel 1", width=15, height=5, command=self.press_btn1, activebackground="green")
@@ -76,75 +77,98 @@ class WindowGUI:
         self.initialize()
         self.master.mainloop()
         
+    
+    def disconnect_all(self):
+        if self.client == None:
+            return
+        MB.reset_output(self.client)
+        
         
         
     def disconnect_button(self):
         if self.client == None:
             return
         MB.disconnect_client(self.client)
+        self.client = None
             
         
     #* Pop up window when clicking connect
     def serial_popup(self, title="Serial Settings"):
-        self.pop_window = tk.Toplevel(self.master)
-        self.pop_window.wm_title(title)
-        self.pop_window.config(borderwidth=10)
-        
-        self.pw_port = tk.StringVar()
-        self.pw_baudrate = tk.StringVar()
-        self.pw_stopbits = tk.StringVar()
-        self.pw_parity = tk.StringVar()
-        self.pw_bytesize = tk.StringVar()
-        
-        #* Inputs label and entry
-        pw_port_label = tk.Label(self.pop_window, text="Port")
-        # Todo : drop down with list from lsdev
-        pw_port_sel = tk.Entry(self.pop_window, textvariable=self.pw_port, width=15, justify="center")
-        
-        baudrate_list = ["4800", "9600", "19200", "38400", "57600", "115200"]
-        self.pw_baudrate.set(baudrate_list[1])
-        pw_baudrate_label = tk.Label(self.pop_window, text="Baudrate")
-        pw_baudrate_sel = tk.OptionMenu(self.pop_window, self.pw_baudrate, *baudrate_list)
-        
-        pw_stopbits_label = tk.Label(self.pop_window, text="Stop Bits")
-        pw_stopbits_sel = tk.Entry(self.pop_window, textvariable=self.pw_stopbits, width=15, justify="center")
-        
-        parity_list = ["[N]one", "[E]ven", "[O]dd"]
-        self.pw_parity.set(parity_list[0])      
-        pw_parity_label = tk.Label(self.pop_window, text="Parity")
-        pw_parity_sel = tk.OptionMenu(self.pop_window, self.pw_parity, *parity_list)
+        try:
+            if self.client != None:
+                # ToDo : Add logger
+                print("Device already connected")
+                Logger.info("Device connected")
+                return
+            
+            self.pop_window = tk.Toplevel(self.master)
+            self.pop_window.wm_title(title)
+            self.pop_window.config(borderwidth=10)
+            
+            self.pw_port = tk.StringVar()
+            self.pw_baudrate = tk.StringVar()
+            self.pw_stopbits = tk.StringVar()
+            self.pw_parity = tk.StringVar()
+            self.pw_bytesize = tk.StringVar()
+            
+            #* Inputs label and entry
+            pw_port_label = tk.Label(self.pop_window, text="Port")
+            # Todo : drop down with list from lsdev
+            pw_port_sel = tk.Entry(self.pop_window, textvariable=self.pw_port, width=15, justify="center")
+            
+            baudrate_list = ["4800", "9600", "19200", "38400", "57600", "115200"]
+            self.pw_baudrate.set(baudrate_list[1])
+            pw_baudrate_label = tk.Label(self.pop_window, text="Baudrate")
+            pw_baudrate_sel = tk.OptionMenu(self.pop_window, self.pw_baudrate, *baudrate_list)
+            
+            pw_stopbits_label = tk.Label(self.pop_window, text="Stop Bits")
+            pw_stopbits_sel = tk.Entry(self.pop_window, textvariable=self.pw_stopbits, width=15, justify="center")
+            
+            parity_list = ["[N]one", "[E]ven", "[O]dd"]
+            self.pw_parity.set(parity_list[0])      
+            pw_parity_label = tk.Label(self.pop_window, text="Parity")
+            pw_parity_sel = tk.OptionMenu(self.pop_window, self.pw_parity, *parity_list)
 
-        bytesize_list = ['5','6','7','8']
-        self.pw_bytesize.set(bytesize_list[-1])
-        pw_bytesize_label = tk.Label(self.pop_window, text="Bytesize")
-        pw_bytesize_sel = tk.OptionMenu(self.pop_window, self.pw_bytesize, *bytesize_list)
+            bytesize_list = ['5','6','7','8']
+            self.pw_bytesize.set(bytesize_list[-1])
+            pw_bytesize_label = tk.Label(self.pop_window, text="Bytesize")
+            pw_bytesize_sel = tk.OptionMenu(self.pop_window, self.pw_bytesize, *bytesize_list)
+            
+            #* Apply and Cancel button
+            pw_button_ok = tk.Button(self.pop_window, text="Connect", command=self.parse_serial_settings)
+            pw_button_cancel = tk.Button(self.pop_window, text="Cancel", command=self.pop_window.destroy)
+            
+            
+            #* Initialize
+            pw_port_label.grid(column=0,row=1)
+            pw_port_sel.grid(column=1,row=1, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
+            pw_baudrate_label.grid(column=0,row=2)
+            pw_baudrate_sel.grid(column=1,row=2, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
+            pw_stopbits_label.grid(column=0,row=3)
+            pw_stopbits_sel.grid(column=1,row=3, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
+            pw_bytesize_label.grid(column=0,row=4)
+            pw_bytesize_sel.grid(column=1,row=4, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
+            pw_parity_label.grid(column=0,row=5)
+            pw_parity_sel.grid(column=1,row=5, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
+            
+            pw_button_ok.grid(column=2, row=6, sticky=tk.E ,pady=(20,0))
+            pw_button_cancel.grid(column=3, row=6, sticky=tk.E , pady=(20,0))
+            
+        except Exception as e:
+            self.error_window = tk.Toplevel(self.master)
+            self.error_window.geometry("300x100")
+            self.error_window.wm_title("Error")
+            error_text = str.format("Error occurs:" + str(e))
+            self.error_message = tk.Label(self.error_window, text=error_text, pady=20)
+            self.error_button = tk.Button(self.error_window, text="OK", command=self.error_window.destroy)
+            self.error_message.pack()
+            self.error_button.pack()
         
-        #* Apply and Cancel button
-        pw_button_ok = tk.Button(self.pop_window, text="Connect", command=self.parse_serial_settings)
-        pw_button_cancel = tk.Button(self.pop_window, text="Cancel", command=self.pop_window.destroy)
-        
-        
-        #* Initialize
-        pw_port_label.grid(column=0,row=1)
-        pw_port_sel.grid(column=1,row=1, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
-        pw_baudrate_label.grid(column=0,row=2)
-        pw_baudrate_sel.grid(column=1,row=2, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
-        pw_stopbits_label.grid(column=0,row=3)
-        pw_stopbits_sel.grid(column=1,row=3, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
-        pw_bytesize_label.grid(column=0,row=4)
-        pw_bytesize_sel.grid(column=1,row=4, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
-        pw_parity_label.grid(column=0,row=5)
-        pw_parity_sel.grid(column=1,row=5, padx=(5,0), pady=5, columnspan=2, sticky=tk.W )
-        
-        pw_button_ok.grid(column=2, row=6, sticky=tk.E ,pady=(20,0))
-        pw_button_cancel.grid(column=3, row=6, sticky=tk.E , pady=(20,0))
-       
         
         
         
     #* Parse arguments 
     def parse_serial_settings(self):
-        # Todo : parse arguments to 1. MB object 2. self. settings
         self.serial_port = self.pw_port.get()
         self.serial_baudrate = self.pw_baudrate.get()
         self.serial_bytesize = self.pw_bytesize.get()
@@ -222,7 +246,8 @@ class WindowGUI:
         self.control_frame.grid(column=0, row=1)
         
         self.button_connect.grid(column=0, row=1, padx=(0, 15))
-        self.button_disconnect.grid(column=1, row=1)
+        self.button_disconnect.grid(column=1, row=1, padx=(0,15))
+        self.button_openall.grid(column=2,row=1)
         
         self.button_chan01.grid(column=0, row=2)
         self.button_chan02.grid(column=1, row=2)

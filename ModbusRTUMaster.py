@@ -81,3 +81,15 @@ def connect(port, bytesize, parity, stopbits, baudrate=9600):
     
 def toggle_register(device, channel):
     device.execute(slaveid, cst.WRITE_SINGLE_REGISTER, channel, output_value=output)
+    
+    
+def reset_output(device):
+    print(device.execute(slaveid, cst.WRITE_SINGLE_REGISTER, 0, output_value=256*8))
+    
+    
+def disconnect_client(client):
+    try:
+        client.close()
+        return
+    except:
+        pass
